@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 
 async function connect() {
-
+  let url = process.env.DATABASE_URL || 
+  'mongodb://localhost:27017/teamwork_dev'
   try {
-    await mongoose.connect('mongodb://localhost:27017/teamwork_dev', {
+    await mongoose.connect(url, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useFindAndModify: false,

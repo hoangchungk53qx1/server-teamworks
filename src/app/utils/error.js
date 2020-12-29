@@ -1,4 +1,4 @@
-const app = require('./app')
+const app = require('../../app')
 
 //404 nott found
 app.use((req,res,next)=>{

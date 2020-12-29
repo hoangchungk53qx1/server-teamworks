@@ -1,229 +1,176 @@
-const User = require('../models/User');
-const Sync = require('sync');
+const jsonInstance = require('../utils/JsonUtils');
+const responeInstance = require('../utils/ResponeUtils');
 const { validationResult } = require('express-validator');
+
+const userService = require('../service/UserService');
+const fs = require('fs');
 
 class UserController {
   //GET
-  query(req, res) {
-    User.find({}, (err, users) => {
-      if (!err) {
-        res.json(users);
-      } else {
-        res
-          .status(400)
-          .json({
-            message: "query error"
-          });
-      }
-    });
+  async queryAll(_, res) {
+
+    await userService.queryAll()
+      .then((users) => {
+        responeInstance
+          .success200(res, jsonInstance.toJsonWithData(`SUCCESS`, users));
+      })
+      .catch((err) => {
+        responeInstance
+          .error400(res, jsonInstance.jsonNoData(err.message));
+      })
+  }
+
+  async getAvatar(req, res) {
+    let idUser = req.params.id
+    // let image = req.file.image
+
+    await userService.getAvatar(idUser)
+      .then((user) => {
+
+        responeInstance
+          .success200(res, jsonInstance.toJsonWithData(`SUCCESS`, user));
+      })
+      .catch((err) => {
+        responeInstance
+          .error400(res, jsonInstance.jsonNoData(err.message));
+      })
+  }
+
+  async changeAvatar(req, res) {
+    let idUser = req.params.id
+
+    var img = fs.readFileSync(req.file.path);
+    var encode_image = img.toString('base64');
+    // Define a JSONobject for the image attributes for saving to database
+
+    var image = new Buffer(encode_image, 'base64')
+
+    var metadata = {
+        contentType: req.file.mimetype
+    };
+    var filename = req.file.filename
+    if (!filename) {
+      filename = Data.now().valueOf().toString()
+    }
+
+    await userService.changeAvatar(idUser, req.file.filename, image, metadata)
+      .then((user) => {
+
+        responeInstance
+          .success200(res, jsonInstance.toJsonWithData(`SUCCESS`, user));
+      })
+      .catch((err) => {
+        responeInstance
+          .error400(res, jsonInstance.jsonNoData(err.message));
+      })
+  }
+
+  async changePassword(req, res) {
+    let idUser = req.params.id
+    let oldPassword = req.body.oldPassword
+    let newPassword = req.body.newPassword
+
+    if (idUser && oldPassword && newPassword) {
+      await userService.changePassword(idUser, oldPassword, newPassword)
+        .then((user) => {
+
+          responeInstance
+            .success200(res, jsonInstance.toJsonWithData(`change password successfully`, user));
+        })
+        .catch((err) => {
+          responeInstance
+            .error400(res, jsonInstance.jsonNoData(err.message));
+        })
+    } else {
+      responeInstance
+        .error400(res, jsonInstance.jsonNoData(`url error`));
+    }
+
+  }
+
+  async query(req, res) {
+    let id = req.params.id
+    if (id != null) {
+
+      await userService.queryWithId(id)
+        .then((user) => {
+          responeInstance
+            .success200(res, jsonInstance.toJsonWithData(`SUCCESS`, user));
+        })
+        .catch((err) => {
+          responeInstance
+            .error400(res, jsonInstance.jsonNoData(err.message));
+        })
+
+    } else {
+      responeInstance
+        .error400(res, jsonInstance.jsonNoData(`url error`));
+    }
   }
 
   //POST
-  create(req, res, next) {
+  async create(req, res) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      res.status(422).json({ errors: errors.array() });
+      responeInstance
+        .error422(res, jsonInstance.jsonNoData({ errors: errors.array() }));
       return;
     }
 
     var respone = {
-      username: req.query.username,
-      password: req.query.password,
-      mail: req.query.mail,
-      status: false,
-      city: req.query.city,
-      numberphone: req.query.numberphone
+      fullname: req.body.fullname,
+      password: req.body.password,
+      mail: req.body.mail,
+      status: (req.body.status != null) ? req.body.status : false,
+      city: req.body.city,
+      numberphone: req.body.numberphone,
+      image: null
     };
 
-    var username = req.query.username.toString();
-    var password = req.query.password.toString();
-    var mail = req.query.mail.toString();
-
-    var user = new User(req.query);
-
-    console.log("res.body = " + req.body)
-    console.log("res progress = " + respone);
-    console.log("first_name = " + respone.first_name);
-
-    User.findOne({ username: username }, (err, usr) => {
-      if (err || usr == null) {
-        user.save(function (err) {
-          if (err) {
-            res
-              .status(400)
-              .json({
-                message: "error"
-              });
-            return;
-          }
-          res.end(`ADD ${username} SUCCCESS!`);
-        });
-      } else {
-        res
-          .status(400)
-          .json({
-            message: "Account already exists"
-          });
-      }
+    await userService.create(
+      respone.fullname, respone.password, respone.mail,
+      respone.status, respone.city, respone.numberphone, respone.image
+    ).then((user) => {
+      responeInstance
+        .success200(res, jsonInstance.toJsonWithData(`ADD SUCCCESS!`, user));
+    }).catch((err) => {
+      responeInstance
+        .error400(res, jsonInstance.jsonNoData(err.message));
     })
   }
 
-  //GET
-  login(req, res) {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(422).json({ errors: errors.array() });
-      return;
-    }
-
-    var respone = {
-      username: req.query.username,
-      password: req.query.password,
-    };
-
-    User.findOne({ username: respone.username, password: respone.password }, (err, users) => {
-      if (!err && users != null) {
-        res.json(users);
-      } else {
-        res
-          .status(400)
-          .json({
-            message: "invalid account"
-          });
-      }
-    });
-  }
-
   async update(req, res) {
-    const errors = validationResult(req);
-
-    // check url
-    for (var param in req.query) {
-      if (!(param == "user" || param == "password" | param == "mail" ||
-        param == "status" || param == "city" || param == "numberphone")) {
-        res
-          .status(400)
-          .json({
-            message: "wrong url"
-          });
-        return
-      }
-      console.log(param);
-    }
-
-    // check param in url
-    if (!errors.isEmpty()) {
-      res.status(422).json({ errors: errors.array() });
-      return;
-    }
-
     var respone = {
-      user: req.query.user,
-      password: req.query.password,
-      mail: req.query.mail,
-      status: req.query.status,
-      city: req.query.city,
-      numberphone: req.query.numberphone
+      id: req.params.id,
+      fullname: req.body.fullname,
+      password: req.body.password,
+      mail: req.body.mail,
+      status: req.body.status,
+      city: req.body.city,
+      numberphone: req.body.numberphone,
+      image: null
     };
 
-    // check user exists
-    if (respone.user != null) {
-      await User.findOne({ username: respone.user }, async (err, user) => {
-        if (err || user == null) {
-          res
-            .status(400)
-            .json({
-              message: "invalid account"
-            });
-        } else {
-          //action update data
-          let username = respone.user
-          let password = respone.password
-          let mail = respone.mail
-          let status = respone.status
-          let city = respone.city
-          let numberphone = respone.numberphone
-
-          if (password != null) {
-            user.password = password;
-          }
-          if (mail != null) {
-            user.mail = mail;
-          }
-          if (status != null) {
-            user.status = status;
-          } else {
-            user.status = false;
-          }
-          if (city != null) {
-            user.city = city;
-          }
-          if (numberphone != null) {
-            user.numberphone = numberphone;
-          }
-
-          var successReturn;
-
-          /* check query exists property */
-          await User.findOneAndUpdate({ username: username }, user, { new: true }, (err, user) => {
-            console.log(">>> password")
-            if (!err) {
-              successReturn = user;
-              // Object.assign(successReturn, user);
-            }
-          })
-
-          await User.findOneAndUpdate({ username: username }, user, { new: true }, (err, user) => {
-            console.log(">>> mail")
-            if (!err) {
-              successReturn = user;
-            }
-          })
-
-          await User.findOneAndUpdate({ username: username }, user, { new: true }, (err, user) => {
-            console.log(">>> status")
-            if (!err) {
-              successReturn = user;
-              // res.json(user);
-            }
-          })
-
-          await User.findOneAndUpdate({ username: username }, user, { new: true }, (err, user) => {
-            console.log(">>> city")
-            if (!err) {
-              successReturn = user;
-              // res.json(user);
-            }
-          })
-
-          await User.findOneAndUpdate({ username: username }, user, { new: true }, (err, user) => {
-            console.log(">>> numberphone")
-            if (!err) {
-              successReturn = user;
-              // res.json(user);
-            }
-          })
-        }
-
-        if (successReturn != {}) {
-          console.log("add successfully!!!")
-          console.log(successReturn)
-          res
-            .status(200)
-            .json(successReturn);
-        }
-      });
-
+    if (respone.id != null) {
+      await userService.update(
+        respone.id, respone.fullname, respone.password, respone.mail,
+        respone.status, respone.city, respone.numberphone, respone.image
+      )
+        .then((user) => {
+          responeInstance
+            .success200(res, jsonInstance.toJsonWithData(`update success`, user))
+        })
+        .catch((err) => {
+          responeInstance
+            .error400(res, jsonInstance.jsonNoData(err.message))
+        })
     } else {
-      res
-        .status(400)
-        .json({
-          message: "wrong url"
-        });
+      responeInstance
+        .error400(res, jsonInstance.jsonNoData(`wrong url`))
     }
   }
 
-  validateParam(param) {
+  validateParam = (param) => {
     return (
       param == "user" || param == "password" | param == "mail" ||
       param == "status" || param == "city" || param == "numberphone"

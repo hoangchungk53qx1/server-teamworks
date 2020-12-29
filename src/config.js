@@ -15,8 +15,9 @@ const config = {
       password: 'Admin123!@#'
     },
     production: {
-      host: "http://202.158.246.220",
-      port: 8000,
+
+      host: "https://server-teamwork.herokuapp.com/",
+      port: process.env.PORT,
       root: rootPath,
       public:pathPublic,
       APP_KEY: "1234",
