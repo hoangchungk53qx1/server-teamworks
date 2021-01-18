@@ -16,7 +16,7 @@ const config = {
     },
     production: {
 
-      host: "https://server-teamwork.herokuapp.com/",
+      host: "https://server-teamworks.herokuapp.com/",
       port: process.env.PORT,
       root: rootPath,
       public:pathPublic,

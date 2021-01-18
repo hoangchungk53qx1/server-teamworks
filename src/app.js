@@ -30,7 +30,7 @@ app.use(express.static('public'));
 
 AwakeHeroku.add({
 
-  url: "https://server-teamwork.herokuapp.com/task/"
+  url: "https://server-teamworks.herokuapp.com/task/"
 
 })
 
