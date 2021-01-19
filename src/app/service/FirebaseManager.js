@@ -15,15 +15,16 @@ global.XMLHttpRequest = require("xhr2");
 // var upload = multer({ storage: storage })
 
 // SET FIREBASE STORAGE
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyA86VqzMtZ1szOW-D9yTg-kHKpkW_gSINE",
-  authDomain: "teamwork-7bfc3.firebaseapp.com",
-  databaseURL: "https://teamwork-7bfc3-default-rtdb.firebaseio.com",
-  projectId: "teamwork-7bfc3",
-  storageBucket: "teamwork-7bfc3.appspot.com",
-  messagingSenderId: "736416770755",
-  appId: "1:736416770755:web:be3e8677332b673b551076",
-  measurementId: "G-QEQC4LH8X1"
+  apiKey: "AIzaSyBn34l1ATJpRuPLcP8T77r80ss-6gn2GI8",
+  authDomain: "teamworks-91376.firebaseapp.com",
+  databaseURL: "https://teamworks-91376-default-rtdb.firebaseio.com",
+  projectId: "teamworks-91376",
+  storageBucket: "teamworks-91376.appspot.com",
+  messagingSenderId: "629043600230",
+  appId: "1:629043600230:web:a0f98f11c01e80bd0446a7",
+  measurementId: "G-1ZFYV1Z7KB"
 };
 
 if (!firebase.apps.length) {
