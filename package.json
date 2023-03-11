@@ -25,7 +25,7 @@
     "file-type": "^16.0.1",
     "firebase": "^8.2.1",
     "firebase-admin": "^9.4.2",
-    "mongoose": "^5.10.9",
+    "mongoose": "^7.0.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.2",
     "multer-gridfs-storage": "^4.2.0",
